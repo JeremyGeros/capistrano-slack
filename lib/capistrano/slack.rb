@@ -26,14 +26,12 @@ module Capistrano
             end
 
             task :starting do
-              slack_token = fetch(:slack_token)
               slack_room = fetch(:slack_room)
               slack_emoji = fetch(:slack_emoji) || ":ghost:"
               slack_username = fetch(:slack_username) || "deploybot"
               slack_application = fetch(:slack_application) || application
               slack_subdomain = fetch(:slack_subdomain)
               slack_application_url = fetch(:slack_application_url, nil)
-              return if slack_token.nil?
               announced_deployer = ActiveSupport::Multibyte::Chars.new(fetch(:deployer)).mb_chars.normalize(:kd).gsub(/[^\x00-\x7F]/,'').to_s
               announced_stage = slack_application_url || fetch(:stage, 'production')
 
@@ -47,7 +45,7 @@ module Capistrano
 
 
               # Parse the API url and create an SSL connection
-              uri = URI.parse("https://#{slack_subdomain}.slack.com/services/hooks/incoming-webhook?token=#{slack_token}")
+              uri = URI.parse(fetch(:slack_webhook_url))
               http = Net::HTTP.new(uri.host, uri.port)
               http.use_ssl = true
               http.verify_mode = OpenSSL::SSL::VERIFY_PEER
@@ -65,14 +63,12 @@ module Capistrano
 
             task :finished do
               begin
-                slack_token = fetch(:slack_token)
                 slack_room = fetch(:slack_room)
                 slack_emoji = fetch(:slack_emoji) || ":ghost:"
                 slack_username = fetch(:slack_username) || "deploybot"
                 slack_application = fetch(:slack_application) || application
                 slack_subdomain = fetch(:slack_subdomain)
                 slack_application_url = fetch(:slack_application_url, nil)
-                return if slack_token.nil?
                 announced_deployer = fetch(:deployer)
                 announced_stage = slack_application_url || fetch(:stage, 'production')
                 end_time = Time.now
@@ -88,7 +84,7 @@ module Capistrano
                 msg << " to #{announced_stage} successfully in #{elapsed} seconds"
 
                 # Parse the URI and handle the https connection
-                uri = URI.parse("https://#{slack_subdomain}.slack.com/services/hooks/incoming-webhook?token=#{slack_token}")
+                uri = URI.parse(fetch(:slack_webhook_url))
                 http = Net::HTTP.new(uri.host, uri.port)
                 http.use_ssl = true
                 http.verify_mode = OpenSSL::SSL::VERIFY_NONE
